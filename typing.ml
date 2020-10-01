@@ -8,7 +8,7 @@ exception Error of t * Type.t * Type.t
 let extenv = ref M.empty
 
 (* for pretty printing (and type normalization) *)
-let rec deref_typ = function (* 型変数を中身でおきかえる関数 (caml2html: typing_deref) *)
+let rec deref_typ = function (* 鐃緒申鐃術随申鐃緒申鐃緒申箸任鐃緒申鐃緒申鐃緒申鐃緒申鐃舜随申 (caml2html: typing_deref) *)
   | Type.Fun(t1s, t2) -> Type.Fun(List.map deref_typ t1s, deref_typ t2)
   | Type.Tuple(ts) -> Type.Tuple(List.map deref_typ ts)
   | Type.Array(t) -> Type.Array(deref_typ t)
@@ -58,7 +58,7 @@ let rec occur r1 = function (* occur check (caml2html: typing_occur) *)
   | Type.Var({ contents = Some(t2) }) -> occur r1 t2
   | _ -> false
 
-let rec unify t1 t2 = (* 型が合うように、型変数への代入をする (caml2html: typing_unify) *)
+let rec unify t1 t2 = (* 鐃緒申鐃緒申鐃順う鐃処う鐃祝￥申鐃緒申鐃術随申鐃舜わ申鐃緒申鐃緒申鐃薯すわ申 (caml2html: typing_unify) *)
   match t1, t2 with
   | Type.Unit, Type.Unit | Type.Bool, Type.Bool | Type.Int, Type.Int | Type.Float, Type.Float -> ()
   | Type.Fun(t1s, t1'), Type.Fun(t2s, t2') ->
@@ -72,7 +72,7 @@ let rec unify t1 t2 = (* 型が合うように、型変数への代入をする (caml2html: typing
   | Type.Var(r1), Type.Var(r2) when r1 == r2 -> ()
   | Type.Var({ contents = Some(t1') }), _ -> unify t1' t2
   | _, Type.Var({ contents = Some(t2') }) -> unify t1 t2'
-  | Type.Var({ contents = None } as r1), _ -> (* 一方が未定義の型変数の場合 (caml2html: typing_undef) *)
+  | Type.Var({ contents = None } as r1), _ -> (* 鐃緒申鐃緒申鐃緒申未鐃緒申鐃緒申侶鐃緒申竸鐃緒申両鐃緒申 (caml2html: typing_undef) *)
       if occur r1 t2 then raise (Unify(t1, t2));
       r1 := Some(t2)
   | _, Type.Var({ contents = None } as r2) ->
@@ -80,7 +80,7 @@ let rec unify t1 t2 = (* 型が合うように、型変数への代入をする (caml2html: typing
       r2 := Some(t1)
   | _, _ -> raise (Unify(t1, t2))
 
-let rec g env e = (* 型推論ルーチン (caml2html: typing_g) *)
+let rec g env e = (* 鐃緒申鐃緒申鐃緒申鐃暑ー鐃緒申鐃緒申 (caml2html: typing_g) *)
   try
     match e with
     | Unit -> Type.Unit
@@ -93,7 +93,7 @@ let rec g env e = (* 型推論ルーチン (caml2html: typing_g) *)
     | Neg(e) ->
         unify Type.Int (g env e);
         Type.Int
-    | Add(e1, e2) | Sub(e1, e2) -> (* 足し算（と引き算）の型推論 (caml2html: typing_add) *)
+    | Add(e1, e2) | Sub(e1, e2) -> (* 足鐃緒申鐃緒申鐃淑と逸申鐃緒申鐃緒申鐃祝の件申鐃緒申鐃緒申 (caml2html: typing_add) *)
         unify Type.Int (g env e1);
         unify Type.Int (g env e2);
         Type.Int
@@ -113,21 +113,21 @@ let rec g env e = (* 型推論ルーチン (caml2html: typing_g) *)
         let t3 = g env e3 in
         unify t2 t3;
         t2
-    | Let((x, t), e1, e2) -> (* letの型推論 (caml2html: typing_let) *)
+    | Let((x, t), e1, e2) -> (* let鐃塾件申鐃緒申鐃緒申 (caml2html: typing_let) *)
         unify t (g env e1);
         g (M.add x t env) e2
-    | Var(x) when M.mem x env -> M.find x env (* 変数の型推論 (caml2html: typing_var) *)
+    | Var(x) when M.mem x env -> M.find x env (* 鐃術随申鐃塾件申鐃緒申鐃緒申 (caml2html: typing_var) *)
     | Var(x) when M.mem x !extenv -> M.find x !extenv
-    | Var(x) -> (* 外部変数の型推論 (caml2html: typing_extvar) *)
+    | Var(x) -> (* 鐃緒申鐃緒申鐃術随申鐃塾件申鐃緒申鐃緒申 (caml2html: typing_extvar) *)
         Format.eprintf "free variable %s assumed as external@." x;
         let t = Type.gentyp () in
         extenv := M.add x t !extenv;
         t
-    | LetRec({ name = (x, t); args = yts; body = e1 }, e2) -> (* let recの型推論 (caml2html: typing_letrec) *)
+    | LetRec({ name = (x, t); args = yts; body = e1 }, e2) -> (* let rec鐃塾件申鐃緒申鐃緒申 (caml2html: typing_letrec) *)
         let env = M.add x t env in
         unify t (Type.Fun(List.map snd yts, g (M.add_list yts env) e1));
         g env e2
-    | App(e, es) -> (* 関数適用の型推論 (caml2html: typing_app) *)
+    | App(e, es) -> (* 鐃舜随申適鐃術の件申鐃緒申鐃緒申 (caml2html: typing_app) *)
         let t = Type.gentyp () in
         unify (g env e) (Type.Fun(List.map (g env) es, t));
         t
@@ -150,7 +150,7 @@ let rec g env e = (* 型推論ルーチン (caml2html: typing_g) *)
         Type.Unit
   with Unify(t1, t2) -> raise (Error(deref_term e, deref_typ t1, deref_typ t2))
 
-let f e =
+let f debug e =
   extenv := M.empty;
 (*
   (match deref_typ (g M.empty e) with
@@ -160,4 +160,6 @@ let f e =
   (try unify Type.Unit (g M.empty e)
   with Unify _ -> failwith "top level does not have type unit");
   extenv := M.map deref_typ !extenv;
-  deref_term e
+  let return = deref_term e in
+  if debug then (print_string "\n -- Typing Result -- \n"; print_string (Syntax.stringify return 0); return)
+  else return
