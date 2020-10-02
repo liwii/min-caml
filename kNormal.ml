@@ -1,6 +1,6 @@
 (* give names to intermediate values (K-normalization) *)
 
-type t = (* KÀµµ¬²½¸å¤Î¼° (caml2html: knormal_t) *)
+type t = (* Kï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î¼ï¿½ (caml2html: knormal_t) *)
   | Unit
   | Int of int
   | Float of float
@@ -12,8 +12,8 @@ type t = (* KÀµµ¬²½¸å¤Î¼° (caml2html: knormal_t) *)
   | FSub of Id.t * Id.t
   | FMul of Id.t * Id.t
   | FDiv of Id.t * Id.t
-  | IfEq of Id.t * Id.t * t * t (* Èæ³Ó + Ê¬´ô (caml2html: knormal_branch) *)
-  | IfLE of Id.t * Id.t * t * t (* Èæ³Ó + Ê¬´ô *)
+  | IfEq of Id.t * Id.t * t * t (* ï¿½ï¿½ï¿½ + Ê¬ï¿½ï¿½ (caml2html: knormal_branch) *)
+  | IfLE of Id.t * Id.t * t * t (* ï¿½ï¿½ï¿½ + Ê¬ï¿½ï¿½ *)
   | Let of (Id.t * Type.t) * t * t
   | Var of Id.t
   | LetRec of fundef * t
@@ -26,7 +26,41 @@ type t = (* KÀµµ¬²½¸å¤Î¼° (caml2html: knormal_t) *)
   | ExtFunApp of Id.t * Id.t list
 and fundef = { name : Id.t * Type.t; args : (Id.t * Type.t) list; body : t }
 
-let rec fv = function (* ¼°¤Ë½Ð¸½¤¹¤ë¡Ê¼«Í³¤Ê¡ËÊÑ¿ô (caml2html: knormal_fv) *)
+let rec stringify (exp : t) (level: int): string =
+  (Syntax.repeat "  " level) ^
+  (match exp with
+  | Unit -> "UNIT" ^ "\n"
+  | Int n -> "INT " ^ (string_of_int n) ^ "\n"
+  | Float f -> "FLOAT " ^ (string_of_float f) ^ "\n"
+  | Neg id1 -> "NEG " ^ id1 ^ "\n"
+  | Add (id1, id2) -> "ADD " ^ id1 ^ " " ^ id2 ^ "\n"
+  | Sub (id1, id2) -> "SUB " ^ id1 ^ " " ^ id2 ^ "\n"
+  | FNeg id1 -> "FNEG " ^ id1 ^ "\n"
+  | FAdd (id1, id2) -> "FADD " ^ id1 ^ " " ^ id2 ^ "\n"
+  | FSub (id1, id2) -> "FSUB " ^ id1 ^ " " ^ id2 ^ "\n"
+  | FMul (id1, id2) -> "FMUL " ^ id1 ^ " " ^ id2 ^ "\n"
+  | FDiv (id1, id2) -> "FDIV " ^ id1 ^ " " ^ id2 ^ "\n"
+  | IfEq (id1, id2, exp1, exp2) -> "IFEQ " ^ id1 ^ " " ^ id2 ^ "\n" ^ (stringify exp1 (level + 1)) ^ (stringify exp2 (level + 1))
+  | IfLE (id1, id2, exp1, exp2) -> "IFLE " ^ id1 ^ " " ^ id2 ^ "\n" ^ (stringify exp1 (level + 1)) ^ (stringify exp2 (level + 1))
+  | Let (expvar, exp1, exp2) -> "LET\n" ^ (Syntax.repeat "  " (level + 1)) ^ (Syntax.stringify_vardef expvar)
+      ^ "\n" ^ (stringify exp1 (level + 1)) ^ (stringify exp2 (level + 1))
+  | Var expId -> "VAR " ^ expId ^ "\n"
+  | LetRec (expFunDef, exp1) -> "FUNDEF\n" ^ (Syntax.repeat "  " (level + 1)) ^ (Syntax.stringify_vardef expFunDef.name) ^ "\n"
+    ^ (Syntax.repeat "  " (level + 1)) ^ (String.concat ", " (List.map Syntax.stringify_vardef expFunDef.args)) ^ "\n"
+    ^ (stringify expFunDef.body (level + 1))
+    ^ (stringify exp1 (level + 1))
+  | App (expf, expls) -> "APP " ^ expf ^ " " ^ (String.concat "" expls) ^ "\n"
+  | Tuple expls -> "TUPLE " ^ (String.concat "" expls) ^ "\n"
+  | LetTuple (expvarls, expdef, expbody) -> "TUPLEDEF\n" ^ (Syntax.repeat "  " (level + 1)) ^ (String.concat ", " (List.map Syntax.stringify_vardef expvarls)) ^ "\n"
+    ^ expdef ^ "\n"
+    ^ (stringify expbody (level + 1))
+  | Get (exparr, expidx) -> "GET " ^ exparr ^ " " ^ expidx ^ "\n"
+  | Put (exparr, expidx, expval) ->  "PUT " ^ exparr ^ " " ^ expidx ^ " " ^ expval ^ "\n"
+  | ExtArray id -> "EXTARRAY " ^ id ^ "\n"
+  | ExtFunApp (id, idls) -> "EXTFUNAPP " ^ id ^ " " ^ (String.concat " " idls)
+  )
+
+let rec fv = function (* ï¿½ï¿½ï¿½Ë½Ð¸ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½Í³ï¿½Ê¡ï¿½ï¿½Ñ¿ï¿½ (caml2html: knormal_fv) *)
   | Unit | Int(_) | Float(_) | ExtArray(_) -> S.empty
   | Neg(x) | FNeg(x) -> S.singleton x
   | Add(x, y) | Sub(x, y) | FAdd(x, y) | FSub(x, y) | FMul(x, y) | FDiv(x, y) | Get(x, y) -> S.of_list [x; y]
@@ -41,7 +75,7 @@ let rec fv = function (* ¼°¤Ë½Ð¸½¤¹¤ë¡Ê¼«Í³¤Ê¡ËÊÑ¿ô (caml2html: knormal_fv) *)
   | Put(x, y, z) -> S.of_list [x; y; z]
   | LetTuple(xs, y, e) -> S.add y (S.diff (fv e) (S.of_list (List.map fst xs)))
 
-let insert_let (e, t) k = (* let¤òÁÞÆþ¤¹¤ëÊä½õ´Ø¿ô (caml2html: knormal_insert) *)
+let insert_let (e, t) k = (* letï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¿ï¿½ (caml2html: knormal_insert) *)
   match e with
   | Var(x) -> k x
   | _ ->
@@ -49,16 +83,16 @@ let insert_let (e, t) k = (* let¤òÁÞÆþ¤¹¤ëÊä½õ´Ø¿ô (caml2html: knormal_insert) *
       let e', t' = k x in
       Let((x, t), e, e'), t'
 
-let rec g env = function (* KÀµµ¬²½¥ë¡¼¥Á¥óËÜÂÎ (caml2html: knormal_g) *)
+let rec g env = function (* Kï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ë¡¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (caml2html: knormal_g) *)
   | Syntax.Unit -> Unit, Type.Unit
-  | Syntax.Bool(b) -> Int(if b then 1 else 0), Type.Int (* ÏÀÍýÃÍtrue, false¤òÀ°¿ô1, 0¤ËÊÑ´¹ (caml2html: knormal_bool) *)
+  | Syntax.Bool(b) -> Int(if b then 1 else 0), Type.Int (* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½true, falseï¿½ï¿½ï¿½ï¿½ï¿½ï¿½1, 0ï¿½ï¿½ï¿½Ñ´ï¿½ (caml2html: knormal_bool) *)
   | Syntax.Int(i) -> Int(i), Type.Int
   | Syntax.Float(d) -> Float(d), Type.Float
   | Syntax.Not(e) -> g env (Syntax.If(e, Syntax.Bool(false), Syntax.Bool(true)))
   | Syntax.Neg(e) ->
       insert_let (g env e)
         (fun x -> Neg(x), Type.Int)
-  | Syntax.Add(e1, e2) -> (* Â­¤·»»¤ÎKÀµµ¬²½ (caml2html: knormal_add) *)
+  | Syntax.Add(e1, e2) -> (* Â­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Kï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (caml2html: knormal_add) *)
       insert_let (g env e1)
         (fun x -> insert_let (g env e2)
             (fun y -> Add(x, y), Type.Int))
@@ -87,7 +121,7 @@ let rec g env = function (* KÀµµ¬²½¥ë¡¼¥Á¥óËÜÂÎ (caml2html: knormal_g) *)
             (fun y -> FDiv(x, y), Type.Float))
   | Syntax.Eq _ | Syntax.LE _ as cmp ->
       g env (Syntax.If(cmp, Syntax.Bool(true), Syntax.Bool(false)))
-  | Syntax.If(Syntax.Not(e1), e2, e3) -> g env (Syntax.If(e1, e3, e2)) (* not¤Ë¤è¤ëÊ¬´ô¤òÊÑ´¹ (caml2html: knormal_not) *)
+  | Syntax.If(Syntax.Not(e1), e2, e3) -> g env (Syntax.If(e1, e3, e2)) (* notï¿½Ë¤ï¿½ï¿½Ê¬ï¿½ï¿½ï¿½ï¿½ï¿½Ñ´ï¿½ (caml2html: knormal_not) *)
   | Syntax.If(Syntax.Eq(e1, e2), e3, e4) ->
       insert_let (g env e1)
         (fun x -> insert_let (g env e2)
@@ -102,13 +136,13 @@ let rec g env = function (* KÀµµ¬²½¥ë¡¼¥Á¥óËÜÂÎ (caml2html: knormal_g) *)
               let e3', t3 = g env e3 in
               let e4', t4 = g env e4 in
               IfLE(x, y, e3', e4'), t3))
-  | Syntax.If(e1, e2, e3) -> g env (Syntax.If(Syntax.Eq(e1, Syntax.Bool(false)), e3, e2)) (* Èæ³Ó¤Î¤Ê¤¤Ê¬´ô¤òÊÑ´¹ (caml2html: knormal_if) *)
+  | Syntax.If(e1, e2, e3) -> g env (Syntax.If(Syntax.Eq(e1, Syntax.Bool(false)), e3, e2)) (* ï¿½ï¿½Ó¤Î¤Ê¤ï¿½Ê¬ï¿½ï¿½ï¿½ï¿½ï¿½Ñ´ï¿½ (caml2html: knormal_if) *)
   | Syntax.Let((x, t), e1, e2) ->
       let e1', t1 = g env e1 in
       let e2', t2 = g (M.add x t env) e2 in
       Let((x, t), e1', e2'), t2
   | Syntax.Var(x) when M.mem x env -> Var(x), M.find x env
-  | Syntax.Var(x) -> (* ³°ÉôÇÛÎó¤Î»²¾È (caml2html: knormal_extarray) *)
+  | Syntax.Var(x) -> (* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½ (caml2html: knormal_extarray) *)
       (match M.find x !Typing.extenv with
       | Type.Array(_) as t -> ExtArray x, t
       | _ -> failwith (Printf.sprintf "external variable %s does not have an array type" x))
@@ -117,7 +151,7 @@ let rec g env = function (* KÀµµ¬²½¥ë¡¼¥Á¥óËÜÂÎ (caml2html: knormal_g) *)
       let e2', t2 = g env' e2 in
       let e1', t1 = g (M.add_list yts env') e1 in
       LetRec({ name = (x, t); args = yts; body = e1' }, e2'), t2
-  | Syntax.App(Syntax.Var(f), e2s) when not (M.mem f env) -> (* ³°Éô´Ø¿ô¤Î¸Æ¤Ó½Ð¤· (caml2html: knormal_extfunapp) *)
+  | Syntax.App(Syntax.Var(f), e2s) when not (M.mem f env) -> (* ï¿½ï¿½ï¿½ï¿½ï¿½Ø¿ï¿½ï¿½Î¸Æ¤Ó½Ð¤ï¿½ (caml2html: knormal_extfunapp) *)
       (match M.find f !Typing.extenv with
       | Type.Fun(_, t) ->
           let rec bind xs = function (* "xs" are identifiers for the arguments *)
@@ -176,4 +210,7 @@ let rec g env = function (* KÀµµ¬²½¥ë¡¼¥Á¥óËÜÂÎ (caml2html: knormal_g) *)
             (fun y -> insert_let (g env e3)
                 (fun z -> Put(x, y, z), Type.Unit)))
 
-let f e = fst (g M.empty e)
+let f b e =
+  let return = fst (g M.empty e) in
+  if b then (print_string "\n -- KNormal Result --\n"; print_string (stringify return 0); return)
+  else return

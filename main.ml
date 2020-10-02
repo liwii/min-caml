@@ -1,6 +1,8 @@
 let limit = ref 1000
 let debug_parsing = ref false
 let debug_typing = ref false
+let debug_knormal = ref false
+let debug_alpha = ref false
 
 let rec iter n e = (* ��Ŭ�������򤯤꤫���� (caml2html: main_iter) *)
   Format.eprintf "iteration %d@." n;
@@ -18,8 +20,8 @@ let lexbuf outchan l = (* �Хåե��򥳥�ѥ��뤷�ƥ����ͥ�
           (Virtual.f
              (Closure.f
                 (iter !limit
-                   (Alpha.f
-                      (KNormal.f
+                   (Alpha.f !debug_alpha
+                      (KNormal.f !debug_knormal
                          (Typing.f !debug_typing
                             (Parser.exp !debug_parsing Lexer.token l)))))))))
 
@@ -39,7 +41,9 @@ let () = (* �������饳��ѥ���μ¹Ԥ����Ϥ���
   Arg.parse
     [("-inline", Arg.Int(fun i -> Inline.threshold := i), "maximum size of functions inlined");
      ("-debug-parsing", Arg.Bool(fun b -> debug_parsing := b), "if true prints the result of parsing");
-     ("-debug-typing", Arg.Bool(fun b -> debug_typing := b), "if true prints the result of typing");
+     ("-debug-typing", Arg.Bool(fun b -> debug_typing := b), "if true prints the result of knormal");
+     ("-debug-knormal", Arg.Bool(fun b -> debug_knormal := b), "if true prints the result of parsing");
+     ("-debug-alpha", Arg.Bool(fun b -> debug_alpha := b), "if true prints the result of alpha");
      ("-iter", Arg.Int(fun i -> limit := i), "maximum number of optimizations iterated")]
     (fun s -> files := !files @ [s])
     ("Mitou Min-Caml Compiler (C) Eijiro Sumii\n" ^
