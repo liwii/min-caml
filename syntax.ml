@@ -67,5 +67,5 @@ let rec stringify (exp : t) (level: int): string =
     ^ (stringify expbody (level + 1))
   | Array (explen, expval) -> "ARRAY\n" ^ (repeat "  " (level + 1)) ^ (stringify explen (level + 1)) ^ (stringify expval (level + 1))
   | Get (exparr, expidx) -> "GET\n" ^ (stringify exparr (level + 1)) ^ (stringify expidx (level + 1))
-  | Put (exparr, expidx, expval) ->  "GET\n" ^ (stringify exparr (level + 1)) ^ (stringify expidx (level + 1)) ^ (stringify expval (level + 1))
+  | Put (exparr, expidx, expval) ->  "PUT\n" ^ (stringify exparr (level + 1)) ^ (stringify expidx (level + 1)) ^ (stringify expval (level + 1))
   )
