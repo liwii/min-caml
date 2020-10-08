@@ -3,6 +3,7 @@ let debug_parsing = ref false
 let debug_typing = ref false
 let debug_knormal = ref false
 let debug_alpha = ref false
+let debug_closure = ref false
 
 let rec iter n e = (* ��Ŭ�������򤯤꤫���� (caml2html: main_iter) *)
   Format.eprintf "iteration %d@." n;
@@ -18,7 +19,7 @@ let lexbuf outchan l = (* �Хåե��򥳥�ѥ��뤷�ƥ����ͥ�
     (RegAlloc.f
        (Simm.f
           (Virtual.f
-             (Closure.f
+             (Closure.f !debug_closure
                 (iter !limit
                    (Alpha.f !debug_alpha
                       (KNormal.f !debug_knormal
@@ -44,6 +45,7 @@ let () = (* �������饳��ѥ���μ¹Ԥ����Ϥ���
      ("-debug-typing", Arg.Bool(fun b -> debug_typing := b), "if true prints the result of knormal");
      ("-debug-knormal", Arg.Bool(fun b -> debug_knormal := b), "if true prints the result of parsing");
      ("-debug-alpha", Arg.Bool(fun b -> debug_alpha := b), "if true prints the result of alpha");
+     ("-debug-closure", Arg.Bool(fun b -> debug_closure := b), "if true prints the result of closure conversion");
      ("-iter", Arg.Int(fun i -> limit := i), "maximum number of optimizations iterated")]
     (fun s -> files := !files @ [s])
     ("Mitou Min-Caml Compiler (C) Eijiro Sumii\n" ^
