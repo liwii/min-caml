@@ -1,10 +1,10 @@
 %{
-(* parser¤¬ÍøÍÑ¤¹¤ëÊÑ¿ô¡¢´Ø¿ô¡¢·¿¤Ê¤É¤ÎÄêµÁ *)
+(* parserï¿½ï¿½ï¿½ï¿½ï¿½Ñ¤ï¿½ï¿½ï¿½ï¿½Ñ¿ï¿½ï¿½ï¿½ï¿½Ø¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¤É¤ï¿½ï¿½ï¿½ï¿½ *)
 open Syntax
 let addtyp x = (x, Type.gentyp ())
 %}
 
-/* (* »ú¶ç¤òÉ½¤¹¥Ç¡¼¥¿·¿¤ÎÄêµÁ (caml2html: parser_token) *) */
+/* (* ï¿½ï¿½ï¿½ï¿½ï¿½É½ï¿½ï¿½ï¿½Ç¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (caml2html: parser_token) *) */
 %token <bool> BOOL
 %token <int> INT
 %token <float> FLOAT
@@ -37,7 +37,7 @@ let addtyp x = (x, Type.gentyp ())
 %token RPAREN
 %token EOF
 
-/* (* Í¥Àè½ç°Ì¤Èassociativity¤ÎÄêµÁ¡ÊÄã¤¤Êý¤«¤é¹â¤¤Êý¤Ø¡Ë (caml2html: parser_prior) *) */
+/* (* Í¥ï¿½ï¿½ï¿½Ì¤ï¿½associativityï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ã¤¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½â¤¤ï¿½ï¿½ï¿½Ø¡ï¿½ (caml2html: parser_prior) *) */
 %nonassoc IN
 %right prec_let
 %right SEMICOLON
@@ -52,13 +52,13 @@ let addtyp x = (x, Type.gentyp ())
 %left prec_app
 %left DOT
 
-/* (* ³«»Ïµ­¹æ¤ÎÄêµÁ *) */
+/* (* ï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ *) */
 %type <Syntax.t> exp
 %start exp
 
 %%
 
-simple_exp: /* (* ³ç¸Ì¤ò¤Ä¤±¤Ê¤¯¤Æ¤â´Ø¿ô¤Î°ú¿ô¤Ë¤Ê¤ì¤ë¼° (caml2html: parser_simple) *) */
+simple_exp: /* (* ï¿½ï¿½Ì¤ï¿½Ä¤ï¿½ï¿½Ê¤ï¿½ï¿½Æ¤ï¿½Ø¿ï¿½ï¿½Î°ï¿½ï¿½ï¿½ï¿½Ë¤Ê¤ï¿½ë¼° (caml2html: parser_simple) *) */
 | LPAREN exp RPAREN
     { $2 }
 | LPAREN RPAREN
@@ -74,7 +74,7 @@ simple_exp: /* (* ³ç¸Ì¤ò¤Ä¤±¤Ê¤¯¤Æ¤â´Ø¿ô¤Î°ú¿ô¤Ë¤Ê¤ì¤ë¼° (caml2html: parser_simp
 | simple_exp DOT LPAREN exp RPAREN
     { Get($1, $4) }
 
-exp: /* (* °ìÈÌ¤Î¼° (caml2html: parser_exp) *) */
+exp: /* (* ï¿½ï¿½ï¿½Ì¤Î¼ï¿½ (caml2html: parser_exp) *) */
 | simple_exp
     { $1 }
 | NOT exp
@@ -83,9 +83,9 @@ exp: /* (* °ìÈÌ¤Î¼° (caml2html: parser_exp) *) */
 | MINUS exp
     %prec prec_unary_minus
     { match $2 with
-    | Float(f) -> Float(-.f) (* -1.23¤Ê¤É¤Ï·¿¥¨¥é¡¼¤Ç¤Ï¤Ê¤¤¤Î¤ÇÊÌ°·¤¤ *)
+    | Float(f) -> Float(-.f) (* -1.23ï¿½Ê¤É¤Ï·ï¿½ï¿½ï¿½ï¿½é¡¼ï¿½Ç¤Ï¤Ê¤ï¿½ï¿½Î¤ï¿½ï¿½Ì°ï¿½ï¿½ï¿½ *)
     | e -> Neg(e) }
-| exp PLUS exp /* (* Â­¤·»»¤ò¹½Ê¸²òÀÏ¤¹¤ë¥ë¡¼¥ë (caml2html: parser_add) *) */
+| exp PLUS exp /* (* Â­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¸ï¿½ï¿½ï¿½Ï¤ï¿½ï¿½ï¿½ë¡¼ï¿½ï¿½ (caml2html: parser_add) *) */
     { Add($1, $3) }
 | exp MINUS exp
     { Sub($1, $3) }
@@ -138,9 +138,10 @@ exp: /* (* °ìÈÌ¤Î¼° (caml2html: parser_exp) *) */
     { Array($2, $3) }
 | error
     { failwith
-        (Printf.sprintf "parse error near characters %d-%d"
-           (Parsing.symbol_start ())
-           (Parsing.symbol_end ())) }
+        (let p = Parsing.symbol_start_pos () in Printf.sprintf "parse error near line %d, characters %d-%d"
+           (p.pos_lnum)
+           (Parsing.symbol_start () - p.pos_bol + 1)
+           (Parsing.symbol_end () - p.pos_bol)) }
 
 fundef:
 | IDENT formal_args EQUAL exp

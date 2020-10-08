@@ -15,6 +15,10 @@ let rec iter n e = (* ��Ŭ�������򤯤꤫���� (caml2htm
   if e = e' then e else
   iter (n - 1) e'
 
+let maybe_print_syntax (debug: bool) (exp: Syntax.t) : Syntax.t = 
+  if debug then (print_string ("\n-- Parsing Result --\n" ^ (Syntax.stringify exp 0)); exp)
+  else exp
+
 let lexbuf outchan l = (* �Хåե��򥳥�ѥ��뤷�ƥ����ͥ�ؽ��Ϥ��� (caml2html: main_lexbuf) *)
   Id.counter := 0;
   Typing.extenv := M.empty;
@@ -27,7 +31,7 @@ let lexbuf outchan l = (* �Хåե��򥳥�ѥ��뤷�ƥ����ͥ�
                    (Alpha.f !debug_alpha
                       (KNormal.f !debug_knormal
                          (Typing.f !debug_typing
-                            (Parser.exp !debug_parsing Lexer.token l)))))))))
+                            (maybe_print_syntax !debug_parsing (Parser.exp Lexer.token l))))))))))
 
 let string s = lexbuf stdout (Lexing.from_string s) (* ʸ����򥳥�ѥ��뤷��ɸ����Ϥ�ɽ������ (caml2html: main_string) *)
 
