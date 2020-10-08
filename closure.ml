@@ -147,5 +147,5 @@ let f debug e =
   toplevel := [];
   let e' = g M.empty S.empty e in
   let return = Prog(List.rev !toplevel, e') in
-  if true then (print_string "\n -- Closure Conversion Result --\n"; print_string (stringify_prog return); return)
+  if debug then (print_string "\n -- Closure Conversion Result --\n"; print_string (stringify_prog return); return)
   else return

@@ -1,10 +1,10 @@
-(* 2¥ª¥Ú¥é¥ó¥É¤Ç¤Ï¤Ê¤¯3¥ª¥Ú¥é¥ó¥É¤Îx86¥¢¥»¥ó¥Ö¥ê¤â¤É¤­ *)
+(* 2ï¿½ï¿½ï¿½Ú¥ï¿½ï¿½É¤Ç¤Ï¤Ê¤ï¿½3ï¿½ï¿½ï¿½Ú¥ï¿½ï¿½É¤ï¿½x86ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¥ï¿½ï¿½É¤ï¿½ *)
 
 type id_or_imm = V of Id.t | C of int
-type t = (* Ì¿Îá¤ÎÎó (caml2html: sparcasm_t) *)
+type t = (* Ì¿ï¿½ï¿½ï¿½ï¿½ï¿½ (caml2html: sparcasm_t) *)
   | Ans of exp
   | Let of (Id.t * Type.t) * exp * t
-and exp = (* °ì¤Ä°ì¤Ä¤ÎÌ¿Îá¤ËÂÐ±þ¤¹¤ë¼° (caml2html: sparcasm_exp) *)
+and exp = (* ï¿½ï¿½Ä°ï¿½Ä¤ï¿½Ì¿ï¿½ï¿½ï¿½ï¿½Ð±ï¿½ï¿½ï¿½ï¿½ë¼° (caml2html: sparcasm_exp) *)
   | Nop
   | Set of int
   | SetL of Id.l
@@ -26,17 +26,92 @@ and exp = (* °ì¤Ä°ì¤Ä¤ÎÌ¿Îá¤ËÂÐ±þ¤¹¤ë¼° (caml2html: sparcasm_exp) *)
   (* virtual instructions *)
   | IfEq of Id.t * id_or_imm * t * t
   | IfLE of Id.t * id_or_imm * t * t
-  | IfGE of Id.t * id_or_imm * t * t (* º¸±¦ÂÐ¾Î¤Ç¤Ï¤Ê¤¤¤Î¤ÇÉ¬Í× *)
+  | IfGE of Id.t * id_or_imm * t * t (* ï¿½ï¿½ï¿½ï¿½ï¿½Ð¾Î¤Ç¤Ï¤Ê¤ï¿½ï¿½Î¤ï¿½É¬ï¿½ï¿½ *)
   | IfFEq of Id.t * Id.t * t * t
   | IfFLE of Id.t * Id.t * t * t
   (* closure address, integer arguments, and float arguments *)
   | CallCls of Id.t * Id.t list * Id.t list
   | CallDir of Id.l * Id.t list * Id.t list
-  | Save of Id.t * Id.t (* ¥ì¥¸¥¹¥¿ÊÑ¿ô¤ÎÃÍ¤ò¥¹¥¿¥Ã¥¯ÊÑ¿ô¤ØÊÝÂ¸ (caml2html: sparcasm_save) *)
-  | Restore of Id.t (* ¥¹¥¿¥Ã¥¯ÊÑ¿ô¤«¤éÃÍ¤òÉü¸µ (caml2html: sparcasm_restore) *)
+  | Save of Id.t * Id.t (* ï¿½ì¥¸ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¿ï¿½ï¿½ï¿½ï¿½Í¤ò¥¹¥ï¿½ï¿½Ã¥ï¿½ï¿½Ñ¿ï¿½ï¿½ï¿½ï¿½ï¿½Â¸ (caml2html: sparcasm_save) *)
+  | Restore of Id.t (* ï¿½ï¿½ï¿½ï¿½ï¿½Ã¥ï¿½ï¿½Ñ¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¤ï¿½ï¿½ï¿½ï¿½ï¿½ (caml2html: sparcasm_restore) *)
 type fundef = { name : Id.l; args : Id.t list; fargs : Id.t list; body : t; ret : Type.t }
-(* ¥×¥í¥°¥é¥àÁ´ÂÎ = ÉâÆ°¾®¿ôÅÀ¿ô¥Æ¡¼¥Ö¥ë + ¥È¥Ã¥×¥ì¥Ù¥ë´Ø¿ô + ¥á¥¤¥ó¤Î¼° (caml2html: sparcasm_prog) *)
+(* ï¿½×¥ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ = ï¿½ï¿½Æ°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¡ï¿½ï¿½Ö¥ï¿½ + ï¿½È¥Ã¥×¥ï¿½Ù¥ï¿½Ø¿ï¿½ + ï¿½á¥¤ï¿½ï¿½Î¼ï¿½ (caml2html: sparcasm_prog) *)
 type prog = Prog of (Id.l * float) list * fundef list * t
+
+let stringify_id_or_imm (i: id_or_imm) : string =
+  match i with
+  | V id -> id
+  | C j -> string_of_int j
+
+let rec stringify (e: t) (level: int) : string =
+  (Syntax.repeat "  " level) ^ (
+    match e with
+    | Ans ex -> "ANS\n" ^ (stringify_exp ex (level + 1))
+    | Let (varexp, expex, expt) -> "LET " ^ (Syntax.stringify_vardef varexp) ^ "\n"
+      ^ (stringify_exp expex (level + 1))
+      ^ (stringify expt (level + 1))
+  )
+and stringify_exp (e: exp) (level: int) : string =
+  (Syntax.repeat "  " level) ^ (
+    match e with
+    | Nop -> "NOP\n"
+    | Set i -> "SET " ^ (string_of_int i) ^ "\n"
+    | SetL (L id) -> "SETL " ^ id ^ "\n"
+    | Mov id -> "MOV " ^ id ^ "\n"
+    | Neg id -> "NEG " ^ id ^ "\n"
+    | Add (id, idm) -> "ADD " ^ id ^ " " ^ (stringify_id_or_imm idm) ^ "\n"
+    | Sub (id, idm) -> "SUB " ^ id ^ " " ^ (stringify_id_or_imm idm) ^ "\n"
+    | Ld (id, idm, i) -> "LD " ^ id ^ " " ^ (stringify_id_or_imm idm) ^ " " ^ (string_of_int i) ^ "\n"
+    | St (id1, id2, idm, i) -> "SD " ^ id1 ^ " " ^ id2 ^ " " ^ (stringify_id_or_imm idm) ^ (string_of_int i) ^ "\n"
+    | FMovD id -> "FMOVD " ^ id ^ "\n"
+    | FNegD id -> "FNEGD " ^ id ^ "\n"
+    | FAddD (id1, id2) -> "FADDD " ^ id1 ^ " " ^ id2 ^ "\n"
+    | FSubD (id1, id2) -> "FSUBD " ^ id1 ^ " " ^ id2 ^ "\n"
+    | FMulD (id1, id2) -> "FMULD " ^ id1 ^ " " ^ id2 ^ "\n"
+    | FDivD (id1, id2) -> "FDIVD " ^ id1 ^ " " ^ id2 ^ "\n"
+    | LdDF (id, idm, i) -> "LDDF " ^ id ^ " " ^ (stringify_id_or_imm idm) ^ " " ^ (string_of_int i) ^ "\n"
+    | StDF (id1, id2, idm, i) -> "SDDF " ^ id1 ^ " " ^ id2 ^ " " ^ (stringify_id_or_imm idm) ^ (string_of_int i) ^ "\n"
+    | Comment str -> "COMMENT " ^ str ^ "\n"
+    | IfEq (id, idm, expt1, expt2) -> "IFEQ " ^ id ^ " " ^ (stringify_id_or_imm idm) ^ "\n"
+      ^ (stringify expt1 (level + 1))
+      ^ (stringify expt2 (level + 1))
+    | IfLE (id, idm, expt1, expt2) -> "IFLE " ^ id ^ " " ^ (stringify_id_or_imm idm) ^ "\n"
+      ^ (stringify expt1 (level + 1))
+      ^ (stringify expt2 (level + 1))
+    | IfGE (id, idm, expt1, expt2) -> "IFGE " ^ id ^ " " ^ (stringify_id_or_imm idm) ^ "\n"
+      ^ (stringify expt1 (level + 1))
+      ^ (stringify expt2 (level + 1))
+    | IfFEq (id1, id2, expt1, expt2) -> "IFFEQ " ^ id1 ^ " " ^ id2 ^ "\n"
+      ^ (stringify expt1 (level + 1))
+      ^ (stringify expt2 (level + 1))
+    | IfFLE (id1, id2, expt1, expt2) -> "IFFLE " ^ id1 ^ " " ^ id2 ^ "\n"
+      ^ (stringify expt1 (level + 1))
+      ^ (stringify expt2 (level + 1))
+    | CallCls (id, idls1, idls2) -> "CALLCLS " ^ id ^ "\n"
+      ^ (Syntax.repeat "  " (level + 1)) ^ (String.concat " " idls1) ^ "\n"
+      ^ (Syntax.repeat "  " (level + 1)) ^ (String.concat " " idls2) ^ "\n"
+    | CallDir (L id, idls1, idls2) -> "CALLDIR " ^ id ^ "\n"
+      ^ (Syntax.repeat "  " (level + 1)) ^ (String.concat " " idls1) ^ "\n"
+      ^ (Syntax.repeat "  " (level + 1)) ^ (String.concat " " idls2) ^ "\n"
+    | Save (id1, id2) -> "SAVE " ^ id1 ^ " " ^ id2 ^ "\n"
+    | Restore id -> "RESTORE " ^ id ^ "\n"
+  )
+
+let stringify_fundef (exp_f: fundef) : string = "FUNDEF " ^ (match exp_f.name with L id -> id) ^ "\n"
+  ^ "  ARGS " ^ (String.concat " " exp_f.args)  ^ "\n"
+  ^ "  FARGS " ^ (String.concat " " exp_f.fargs) ^ "\n"
+  ^ (stringify exp_f.body 1)
+  ^ "  RET " ^ (Type.stringify exp_f.ret) ^ "\n"
+
+let stringify_l_f (l_f: (Id.l * float)) : string =
+  match l_f with
+  | (L id, f) -> id ^ " " ^ (string_of_float f)
+
+let stringify_prog (exp_prog: prog) : string =
+  match exp_prog with Prog (id_fl_ls, exp_f_ls, expt) ->
+  (String.concat " " (List.map stringify_l_f id_fl_ls)) ^ "\n"
+  ^ (String.concat "" (List.map stringify_fundef exp_f_ls))
+  ^ (stringify expt 0)
 
 let fletd(x, e1, e2) = Let((x, Type.Float), e1, e2)
 let seq(e1, e2) = Let((Id.gentmp Type.Unit, Type.Unit), e1, e2)
