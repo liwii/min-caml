@@ -6,6 +6,7 @@ open Type
 
 (* ����ɽ����ά�� *)
 let space = [' ' '\t']
+(* 改行を表す正規表現 *)
 let newline = ['\n' '\r']
 let digit = ['0'-'9']
 let lower = ['a'-'z']
@@ -84,14 +85,14 @@ rule token = parse
 | lower (digit|lower|upper|'_')* (* ¾�Ρ�ͽ���פ���Ǥʤ��Ȥ����ʤ� *)
     { IDENT(Lexing.lexeme lexbuf) }
 | newline
-    { Lexing.new_line lexbuf; token lexbuf }
+    { Lexing.new_line lexbuf; token lexbuf } (* 改行を見つけたとき、Lexing.new_line を lexbuf に対して呼んでからパースを続ける *)
 | _
     { failwith
         (let p = Lexing.lexeme_start_p lexbuf in Printf.sprintf "unknown token %s near line %d, characters %d-%d"
            (Lexing.lexeme lexbuf)
            p.pos_lnum
            ((Lexing.lexeme_start lexbuf) - p.pos_bol + 1)
-           ((Lexing.lexeme_end lexbuf) - p.pos_bol)) }
+           ((Lexing.lexeme_end lexbuf) - p.pos_bol)) } (* 失敗したときのメッセージに Lexing モジュールから得られるトークンの位置を追加する *)
 and comment = parse
 | "*)"
     { () }

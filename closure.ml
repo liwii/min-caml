@@ -29,6 +29,7 @@ type fundef = { name : Id.l * Type.t;
                 body : t }
 type prog = Prog of fundef list * t
 
+(* Clousure.t を string に変換する *)
 let rec stringify (exp: t) (level: int): string =
   (Syntax.repeat "  " level) ^
   (match exp with
@@ -62,12 +63,14 @@ let rec stringify (exp: t) (level: int): string =
   | ExtArray (L id) -> "EXTARRAY " ^ id ^ "\n"
   )
 
+(* Clousure.fundef を string に変換する *)
 let stringify_fundef (fexp: fundef) =
   "FUNDEF " ^ (Syntax.stringify_vardef (match fexp.name with (L expid, expty) -> (expid, expty))) ^ "\n"
   ^ "  " ^ (String.concat " " (List.map Syntax.stringify_vardef fexp.args)) ^ "\n"
   ^ "  " ^ (String.concat " " (List.map Syntax.stringify_vardef fexp.formal_fv)) ^ "\n"
   ^ (stringify fexp.body 0)
 
+(* Clousure.prog を string に変換する *)
 let stringify_prog (exp: prog) : string =
   match exp with Prog (f_ls, expt) ->
     (String.concat "\n" (List.map stringify_fundef f_ls)) ^  (stringify expt 0)
@@ -143,6 +146,7 @@ let rec g env known = function (* �����������Ѵ��롼�
   | KNormal.ExtArray(x) -> ExtArray(Id.L(x))
   | KNormal.ExtFunApp(x, ys) -> AppDir(Id.L("min_caml_" ^ x), ys)
 
+(* デバッグ用変数 (debug) が true の場合、Clousure.f を返す前に Clousre.stringify_prog を呼び、 print する *)
 let f debug e =
   toplevel := [];
   let e' = g M.empty S.empty e in

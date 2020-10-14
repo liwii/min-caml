@@ -43,6 +43,7 @@ let rec g env = function (* ���Ѵ��롼�������� (caml2h
   | ExtArray(x) -> ExtArray(x)
   | ExtFunApp(x, ys) -> ExtFunApp(x, List.map (fun y -> find y env) ys)
 
+(* デバッグ用変数 (b) が true の場合、Knormal.t を返す前に Knormal.stringify を呼び、 print する *)
 let f b kn =
   let return = g M.empty kn in
   if b then (print_string "\n -- Alpha Result --\n"; print_string (stringify return 0); return)

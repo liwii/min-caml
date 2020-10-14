@@ -26,6 +26,7 @@ type t = (* K��������μ� (caml2html: knormal_t) *)
   | ExtFunApp of Id.t * Id.t list
 and fundef = { name : Id.t * Type.t; args : (Id.t * Type.t) list; body : t }
 
+(* KNormal.t を string に変換する *)
 let rec stringify (exp : t) (level: int): string =
   (Syntax.repeat "  " level) ^
   (match exp with
@@ -210,6 +211,7 @@ let rec g env = function (* K�������롼�������� (c
             (fun y -> insert_let (g env e3)
                 (fun z -> Put(x, y, z), Type.Unit)))
 
+(* デバッグ用変数 (b) が true の場合、Knormal.t を返す前に Knormal.stringify を呼び、 print する *)
 let f b e =
   let return = fst (g M.empty e) in
   if b then (print_string "\n -- KNormal Result --\n"; print_string (stringify return 0); return)

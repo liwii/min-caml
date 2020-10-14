@@ -10,6 +10,7 @@ type t = (* MinCaml�η���ɽ������ǡ����� (caml2htm
 
 let gentyp () = Var(ref None) (* ���������ѿ����� *)
 
+(* Type.t を string に変換する *)
 let rec stringify (ty : t) : string =
   match ty with
   | Unit -> "UNIT"

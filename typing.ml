@@ -150,6 +150,7 @@ let rec g env e = (* �������롼���� (caml2html: typing_g) 
         Type.Unit
   with Unify(t1, t2) -> raise (Error(deref_term e, deref_typ t1, deref_typ t2))
 
+(* デバッグ用変数 (debug) が true の場合、Syntax.t を返す前に Syntax.stringify を呼び、 print する *)
 let f debug e =
   extenv := M.empty;
 (*

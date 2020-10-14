@@ -147,6 +147,7 @@ let h { Closure.name = (Id.L(x), t); Closure.args = yts; Closure.formal_fv = zts
   | _ -> assert false
 
 (* �ץ���������Τβ��ۥޥ��󥳡������� (caml2html: virtual_f) *)
+(* デバッグ用変数 (debug) が true の場合、Asm.prog を返す前に Asm.stringify_prog を呼び、 print する *)
 let f debug (Closure.Prog(fundefs, e)) =
   data := [];
   let fundefs = List.map h fundefs in

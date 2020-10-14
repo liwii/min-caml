@@ -1,4 +1,5 @@
 let limit = ref 1000
+(* デバッグ用のコマンドライン変数に対する参照 *)
 let debug_parsing = ref false
 let debug_typing = ref false
 let debug_knormal = ref false
@@ -15,10 +16,12 @@ let rec iter n e = (* ��Ŭ�������򤯤꤫���� (caml2htm
   if e = e' then e else
   iter (n - 1) e'
 
+(* デバッグ用変数 (debug) が true の場合、を返す前に Syntax.stringify を呼び、 exp を print する *)
 let maybe_print_syntax (debug: bool) (exp: Syntax.t) : Syntax.t = 
   if debug then (print_string ("\n-- Parsing Result --\n" ^ (Syntax.stringify exp 0)); exp)
   else exp
 
+(* 各 debug_* が true のとき、対応した中間結果が print される *)
 let lexbuf outchan l = (* �Хåե��򥳥�ѥ��뤷�ƥ����ͥ�ؽ��Ϥ��� (caml2html: main_lexbuf) *)
   Id.counter := 0;
   Typing.extenv := M.empty;
@@ -48,6 +51,7 @@ let () = (* �������饳��ѥ���μ¹Ԥ����Ϥ���
   let files = ref [] in
   Arg.parse
     [("-inline", Arg.Int(fun i -> Inline.threshold := i), "maximum size of functions inlined");
+    (* 中間結果出力のためのデバッグ用変数 *)
      ("-debug-parsing", Arg.Bool(fun b -> debug_parsing := b), "if true prints the result of parsing");
      ("-debug-typing", Arg.Bool(fun b -> debug_typing := b), "if true prints the result of knormal");
      ("-debug-knormal", Arg.Bool(fun b -> debug_knormal := b), "if true prints the result of parsing");
@@ -59,7 +63,9 @@ let () = (* �������饳��ѥ���μ¹Ԥ����Ϥ���
      ("-iter", Arg.Int(fun i -> limit := i), "maximum number of optimizations iterated")]
     (fun s -> files := !files @ [s])
     ("Mitou Min-Caml Compiler (C) Eijiro Sumii\n" ^
-     Printf.sprintf "usage: %s [-inline m] [-iter n] [-debug-parsing b1] [-debug-typing b2]...filenames without \".ml\"..." Sys.argv.(0));
+     (Printf.sprintf "usage: %s " Sys.argv.(0)) ^
+     "[-inline m] [-iter n] [-debug-parsing b1] [-debug-typing b2] [-debug-knormal b3] [debug-alpha b4] " ^
+     "[-debug-closure b5] [-debug-virtual b6] [-debug-simm b7] [-debug-regalloc b8]...filenames without \".ml\"..." );
   List.iter
     (fun f -> ignore (file f))
     !files

@@ -33,6 +33,7 @@ and g' env = function (* ��̿���¨�ͺ�Ŭ�� (caml2html: simm13_
 let h { name = l; args = xs; fargs = ys; body = e; ret = t } = (* �ȥåץ�٥�ؿ���¨�ͺ�Ŭ�� *)
   { name = l; args = xs; fargs = ys; body = g M.empty e; ret = t }
 
+(* デバッグ用変数 (debug) が true の場合、Asm.prog を返す前に Asm.stringify_prog を呼び、 print する *)
 let f debug (Prog(data, fundefs, e)) = (* �ץ���������Τ�¨�ͺ�Ŭ�� *)
   let return = Prog(data, List.map h fundefs, g M.empty e) in
   if debug then (print_string "\n -- Simm Result --\n"; print_string (stringify_prog return); return)

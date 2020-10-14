@@ -142,6 +142,7 @@ exp: /* (* ���̤μ� (caml2html: parser_exp) *) */
            (p.pos_lnum)
            (Parsing.symbol_start () - p.pos_bol + 1)
            (Parsing.symbol_end () - p.pos_bol)) }
+ /* (* 失敗したときのメッセージに Parsing モジュールから得られるトークンの位置を追加する *) */
 
 fundef:
 | IDENT formal_args EQUAL exp

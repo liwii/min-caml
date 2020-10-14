@@ -26,13 +26,16 @@ type t = (* MinCaml�ι�ʸ��ɽ������ǡ����� (caml2h
   | Put of t * t * t
 and fundef = { name : Id.t * Type.t; args : (Id.t * Type.t) list; body : t }
 
+(* インデントを表現するために同じ文字 string を繰り返して結合する *)
 let rec repeat (s: string) (n: int): string =
   if n <= 0 then ""
   else s ^ (repeat s (n - 1))
 
+(* "Varname : Type" というstring を出力する *)
 let stringify_vardef (vardef: (Id.t * Type.t)): string =
   (fst vardef) ^ " : " ^ (Type.stringify (snd vardef))
 
+(* Syntax.t を string に変換する *)
 let rec stringify (exp : t) (level: int): string =
   (repeat "  " level) ^
   (match exp with

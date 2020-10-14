@@ -228,6 +228,7 @@ let h { name = Id.L(x); args = ys; fargs = zs; body = e; ret = t } = (* �ؿ�
   let (e', regenv') = g (a, t) (Ans(Mov(a))) regenv e in
   { name = Id.L(x); args = arg_regs; fargs = farg_regs; body = e'; ret = t }
 
+(* デバッグ用変数 (debug) が true の場合、Asm.prog を返す前に Asm.stringify_prog を呼び、 print する *)
 let f debug (Prog(data, fundefs, e)) = (* �ץ���������ΤΥ쥸����������� (caml2html: regalloc_f) *)
   Format.eprintf "register allocation: may take some time (up to a few minutes, depending on the size of functions)@.";
   let fundefs' = List.map h fundefs in

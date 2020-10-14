@@ -38,11 +38,14 @@ type fundef = { name : Id.l; args : Id.t list; fargs : Id.t list; body : t; ret 
 (* �ץ���������� = ��ư���������ơ��֥� + �ȥåץ�٥�ؿ� + �ᥤ��μ� (caml2html: sparcasm_prog) *)
 type prog = Prog of (Id.l * float) list * fundef list * t
 
+
+(* id_or_imm を string に変換する *)
 let stringify_id_or_imm (i: id_or_imm) : string =
   match i with
   | V id -> id
   | C j -> string_of_int j
 
+(* Asm.t を string に変換する *)
 let rec stringify (e: t) (level: int) : string =
   (Syntax.repeat "  " level) ^ (
     match e with
@@ -51,6 +54,7 @@ let rec stringify (e: t) (level: int) : string =
       ^ (stringify_exp expex (level + 1))
       ^ (stringify expt (level + 1))
   )
+(* Asm.exp を string に変換する *)
 and stringify_exp (e: exp) (level: int) : string =
   (Syntax.repeat "  " level) ^ (
     match e with
@@ -97,16 +101,19 @@ and stringify_exp (e: exp) (level: int) : string =
     | Restore id -> "RESTORE " ^ id ^ "\n"
   )
 
+(* Asm.fundef を string に変換する *)
 let stringify_fundef (exp_f: fundef) : string = "FUNDEF " ^ (match exp_f.name with L id -> id) ^ "\n"
   ^ "  ARGS " ^ (String.concat " " exp_f.args)  ^ "\n"
   ^ "  FARGS " ^ (String.concat " " exp_f.fargs) ^ "\n"
   ^ (stringify exp_f.body 1)
   ^ "  RET " ^ (Type.stringify exp_f.ret) ^ "\n"
 
+(* (Id.l * float) のタプルを string に変換する *)
 let stringify_l_f (l_f: (Id.l * float)) : string =
   match l_f with
   | (L id, f) -> id ^ " " ^ (string_of_float f)
 
+(* Asm.prog を string に変換する *)
 let stringify_prog (exp_prog: prog) : string =
   match exp_prog with Prog (id_fl_ls, exp_f_ls, expt) ->
   (String.concat " " (List.map stringify_l_f id_fl_ls)) ^ "\n"
